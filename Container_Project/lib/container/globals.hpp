@@ -10,5 +10,6 @@
 #include <exception>
 #include <cassert>
 #include <iostream>
+#include <functional>
 
 #endif // GLOBALS_HPP_

@@ -4,6 +4,7 @@
 #include "globals.hpp"
 #include "element.hpp"
 #include "container-iterator.hpp"
+#include "test.hpp"
 
 template <class T> class Container
 {
@@ -33,7 +34,7 @@ template <class T> class Container
 
   public:
   Container(void);
-  template <class U> friend void test(void);
+  friend void test<int>(void);
 
   template <class... Args> void emplace(Args&&... args)
   {
@@ -60,7 +61,7 @@ template <class T> class Container
 
   ContainerIterator<T> begin(void)
   {
-    auto it = ContainerIterator<T>(*this, first_ + 1);
+    auto it = ContainerIterator<T>(*this, first_);
     it.FindFirstAlive();
     return it;
   }
@@ -68,6 +69,18 @@ template <class T> class Container
   ContainerIterator<T> end(void)
   {
     return ContainerIterator<T>(*this, last_);
+  }
+  
+  ContainerIterator<T> rbegin(void)
+  {
+    return ContainerIterator<T>(*this, first_);
+  }
+  
+  ContainerIterator<T> rend(void)
+  {
+    auto it = ContainerIterator<T>(*this, last_);
+    it.FindPrevAlive();
+    return it;
   }
 };
 
@@ -141,63 +154,6 @@ template <class T> typename Container<T>::size_type Container<T>::size(void) con
 template <class T> typename Container<T>::size_type Container<T>::capacity(void) const
 {
   return capacity_;
-}
-
-template <class T = int> void test(void)
-{
-  Container<T> c;
-
-  /*
-   * Default constructor should build a container with an
-   * array of blocks, set the first_ and last_ pointers of the
-   * container and the state of the block should be
-   * boundary -> [ free ] -> boundary.
-   * There should also be a free list which spans the 
-   * inner boundary
-   *
-   */
-
-  assert(c.blocks_.size() == 1);
-
-  assert(c.size() == 0);
-
-  typename Container<T>::Block& block = c.blocks_[0].first;
-  typename Container<T>::size_type size = c.blocks_[0].second;
-  typename Container<T>::ElementPtr curr = c.free_list_;  
-
-  assert(c.capacity() == size);  
-  assert(size == 16);
-  assert(block[0].GetState() == Element<T>::State::Boundary);
-  assert(block[17].GetState() == Element<T>::State::Boundary);
-    
-  for (decltype(size) i = 1; i < 17; ++i) {
-    assert(curr);
-    assert(block[i].GetState() == Element<T>::State::Free);
-    assert(block.get() + i == curr);
-    curr = curr->GetNext();
-  }
-  
-  /*
-   * We should also be able to emplace elements in the container
-   */
-   
-  for (T i = 0; i < 16; ++i) {
-    c.emplace(i);
-  }
-  
-  typename Container<T>::iterator it = c.begin();
-  decltype(size) i = 0;
-  for ( ; it != c.end(); ++it, ++i) {
-    assert(it.get() == block.get() + i + 1);
-    assert(*it == i);
-  }
-  assert(c.free_list_ == nullptr);
-  
-  /*
-   * We should also be able to fully expand the capacity of the
-   * container and it still be forwards and backwards iterable
-   */ 
-   
 }
 
 #endif // CONTAINER_HPP_

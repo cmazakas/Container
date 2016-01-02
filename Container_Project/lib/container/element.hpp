@@ -16,6 +16,8 @@ template <class T> class Element
   {
     T data;
     Element* next;
+    
+    // write destructor
   };
 
   private:
