@@ -27,7 +27,7 @@ template <class T> class Element
   public:
   Element(void)
   {
-    SetState(State::Default);
+    setState(State::Free);
     buffer_.next = nullptr;
   }
 
@@ -36,43 +36,54 @@ template <class T> class Element
     if (state_ == State::Alive) {
       buffer_.data.~T();
     }
+    
+    buffer_.next = nullptr;
+    state_ = Free;
   }
 
-  void SetState(State state)
+  void setState(State state)
   {
     state_ = state;
   }
 
-  void SetData(T&& data)
+  void setData(T&& data)
   {
     buffer_.data = data;
-    SetState(State::Alive);
+    setState(State::Alive);
   }
 
-  void SetNext(Element* next)
+  void setNext(Element* next)
   {
-    assert(GetState() == State::Free || GetState() == State::Boundary);
+    if (next)
+      assert(next->getState() == State::Free || next->getState() == State::Boundary);
+    else
+      assert(next == nullptr);
+   
+    if (state_ == Alive) {
+      buffer_.data.~T();
+    }
+    
     buffer_.next = next;
   }
 
-  State GetState(void) const
+  State getState(void) const
   {
     return state_;
   }
 
-  T GetData(void) const
+  T getData(void) const
   {
     assert(state_ == State::Alive);
     return buffer_.data;
   }
 
-  T& GetDataByReference(void)
+  T& getDataByReference(void)
   {
     assert(state_ == State::Alive);
     return buffer_.data;
   }
 
-  Element* GetNext(void)
+  Element* getNext(void)
   {
     // assert(state_ != State::Alive);
     return buffer_.next;

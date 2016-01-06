@@ -30,62 +30,45 @@ template <class T> class Container
   size_type capacity_;
   size_type block_size_;
 
-  void PushBlock(void);
+  void pushBlock(void);
 
   public:
   Container(void);
   friend void test<int>(void);
 
-  template <class... Args> void emplace(Args&&... args)
-  {
-    if (!free_list_)
-      PushBlock();
-
-    try
-    {
-      auto next = free_list_->GetNext();
-      free_list_->emplace(args...);
-      assert(free_list_->GetState() == Element<T>::State::Alive);
-      free_list_ = next;
-      ++size_;
-    }
-    catch (std::exception& e)
-    {
-      // TODO: Add cleanup if a new block was appended
-      throw e;
-    }
-  }
-
+  template <class... Args> void emplace(Args&&... args);
+  void clear(iterator& it);
   size_type size(void) const;
   size_type capacity(void) const;
-
-  ContainerIterator<T> begin(void)
+  iterator begin(void)
   {
-    auto it = ContainerIterator<T>(*this, first_);
-    it.FindFirstAlive();
+    auto it = iterator(*this, first_);
+    it.findFirstAlive();
     return it;
   }
 
-  ContainerIterator<T> end(void)
+  iterator end(void)
   {
-    return ContainerIterator<T>(*this, last_);
+    return iterator(*this, last_);
   }
   
-  ContainerIterator<T> rbegin(void)
+  iterator rbegin(void)
   {
-    return ContainerIterator<T>(*this, first_);
+    return iterator(*this, first_);
   }
   
-  ContainerIterator<T> rend(void)
+  iterator rend(void)
   {
-    auto it = ContainerIterator<T>(*this, last_);
-    it.FindPrevAlive();
+    auto it = iterator(*this, last_);
+    it.findPrevAlive();
     return it;
   }
 };
 
 template <class T> Container<T>::Container(void)
 {
+  blocks_.reserve(32);
+  
   first_ = nullptr;
   last_ = nullptr;
   free_list_ = nullptr;
@@ -94,10 +77,42 @@ template <class T> Container<T>::Container(void)
   capacity_ = 0;
   block_size_ = INTIAL_BLOCK_SIZE;
 
-  PushBlock();
+  pushBlock();
 }
 
-template <class T> void Container<T>::PushBlock(void)
+template <class T> template <class... Args> void Container<T>::emplace(Args&&... args)
+{
+  if (!free_list_)
+    pushBlock();
+
+  try {
+    auto next = free_list_->getNext();
+    free_list_->emplace(args...);
+    assert(free_list_->getState() == Element<T>::State::Alive);
+    free_list_ = next;
+    ++size_;
+  } catch (std::exception& e) {
+    // TODO: Add cleanup if a new block was appended
+    throw e;
+  }
+}
+
+template <class T> void Container<T>::clear(iterator& it)
+{
+  auto element = it.get();
+  
+  assert(element->getState() == Element<T>::State::Alive);
+  
+  // set next ptr to free list head
+  element->setNext(free_list_);
+  element->setState(Element<T>::State::Free);
+  free_list_ = element;
+  --size_;
+  
+  it.findNextAlive();
+}
+
+template <class T> void Container<T>::pushBlock(void)
 {
   const size_type num_boundary_points = 2;
   const size_type true_block_size = block_size_ + num_boundary_points;
@@ -107,15 +122,15 @@ template <class T> void Container<T>::PushBlock(void)
   Block block(new Element<T>[true_block_size]);
 
   // set boundary info first
-  block[first_idx].SetState(Element<T>::State::Boundary);
-  block[last_idx].SetState(Element<T>::State::Boundary);
+  block[first_idx].setState(Element<T>::State::Boundary);
+  block[last_idx].setState(Element<T>::State::Boundary);
 
   if (!blocks_.empty()) {
     Block& last_block = blocks_.back().first;
     size_type last_block_size = blocks_.back().second + num_boundary_points;
 
-    last_block[last_block_size - 1].SetNext(block.get());
-    block[0].SetNext(last_block.get() + last_block_size - 1);
+    last_block[last_block_size - 1].setNext(block.get());
+    block[0].setNext(last_block.get() + last_block_size - 1);
   } else {
     first_ = block.get();
   }
@@ -124,13 +139,13 @@ template <class T> void Container<T>::PushBlock(void)
 
   // iterate the internals of the block
   for (size_type i = 1; i < last_idx; ++i) {
-    block[i].SetState(Element<T>::State::Free);
-    block[i].SetNext(i + 1 == last_idx ? nullptr : block.get() + i + 1);
+    block[i].setState(Element<T>::State::Free);
+    block[i].setNext(i + 1 == last_idx ? nullptr : block.get() + i + 1);
   }
 
   // do free list stuff
   if (free_list_) {
-    free_list_->SetNext(block.get() + 1);
+    free_list_->setNext(block.get() + 1);
   } else {
     free_list_ = block.get() + 1;
   }

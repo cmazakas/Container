@@ -26,15 +26,15 @@ template <> void test<int>(void)
 
     assert(c.capacity() == size);  
     assert(size == 16);
-    assert(block[0].GetState() == Element<int>::State::Boundary);
-    assert(block[17].GetState() == Element<int>::State::Boundary);
+    assert(block[0].getState() == Element<int>::State::Boundary);
+    assert(block[17].getState() == Element<int>::State::Boundary);
       
     for (decltype(size) i = 1; i < 17; ++i) {
       assert(curr);
-      assert(block[i].GetState() == Element<int>::State::Free);
+      assert(block[i].getState() == Element<int>::State::Free);
       assert(block.get() + i == curr);
       
-      curr = curr->GetNext();
+      curr = curr->getNext();
     }
     
     /*
@@ -49,7 +49,7 @@ template <> void test<int>(void)
     decltype(size) i = 0;
     for ( ; it != c.end(); ++it, ++i) {
       std::cout << it.get() << " : " << i << std::endl;
-      assert(it.get()->GetState() == Element<int>::State::Alive);
+      assert(it.get()->getState() == Element<int>::State::Alive);
       assert(it.get() == block.get() + i + 1);
       assert((decltype(size) ) *it == i);
     }
@@ -86,5 +86,28 @@ template <> void test<int>(void)
     std::cout << std::endl;
     
     assert(c.capacity() == 160);
+  }
+  
+  {
+    std::cout << "\nClear method testing\n" << std::endl;
+    Container<int> c;
+    
+    for (int i = 0; i < 128; ++i) {
+      c.emplace(i);
+    }
+    
+    int i = 0;
+    for (auto it = c.begin(); it != c.end(); ++i) {
+      if (i % 4 == 0) {
+        c.clear(it);
+      } else {
+        ++it;
+      }
+    }
+    
+    for (auto it = c.begin(); it != c.end(); ++it) {
+      std::cout << *it << std::endl;
+      assert(*it % 4 != 0);
+    }
   }
 }

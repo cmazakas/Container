@@ -4,12 +4,12 @@
 #include "globals.hpp"
 #include "container.hpp"
 
-template <class T> void AssertIsBoundary(Element<T>* elem)
+template <class T> void assertIsBoundary(Element<T>* elem)
 {
-  assert(elem->GetState() == Element<T>::State::Boundary);
+  assert(elem->getState() == Element<T>::State::Boundary);
 }
 
-template <class T> void AssertIsBoundary(typename Element<T>::State state)
+template <class T> void assertIsBoundary(typename Element<T>::State state)
 {
   assert(state == Element<T>::State::Boundary);
 }
@@ -22,30 +22,34 @@ template <class T> class ContainerIterator
   friend class Container<T>;
 
   Container<T>& container_;
-  // data
   Element<T>* element_;
-  typename Element<T>::State state_;
+  
+  // personally, I hate using runtime constructs
+  // to handle program logic but I've yet to figure
+  // out a way to get the behavior I want without them
+  // so function pointers are necessary for now
   void (ContainerIterator<T>::*forward_)(void);
   void (ContainerIterator<T>::*backward_)(void);
   void (ContainerIterator<T>::*stay_)(void);
 
   // methods
-  void AdvancePointer(void);
-  void RetractPointer(void);
-  void StayInPlace(void);
+  void advancePointer(void);
+  void retractPointer(void);
+  void stayInPlace(void);
   void step(
       void (ContainerIterator<T>::*forward_or_stay)(void),
       void (ContainerIterator<T>::*stay_or_backward)(void),
       void (ContainerIterator<T>::*forward_or_backward)(void)
   );
-  void FindFirstAlive(void);
-  void FindNextAlive(void);
-  void FindPrevAlive(void);
+  void findFirstAlive(void);
+  void findNextAlive(void);
+  void findPrevAlive(void);
 
   public:
   ContainerIterator(Container<T>& container, Element<T>* element);
 
   Element<T>* get(void);
+  typename Element<T>::State getState(void) const;
 
   void operator++(void);
   void operator--(void);
@@ -65,27 +69,24 @@ ContainerIterator<T>::ContainerIterator(Container<T>& container, Element<T>* ele
   element_ = element;
   assert(element_);
 
-  state_ = element_->GetState();
-  assert(state_ != Element<T>::State::Default);
+  assert(element_->getState() != Element<T>::State::Default);
   
-  forward_ = &ContainerIterator<T>::AdvancePointer;
-  backward_ = &ContainerIterator<T>::RetractPointer;
-  stay_ = &ContainerIterator<T>::StayInPlace;
+  forward_ = &ContainerIterator<T>::advancePointer;
+  backward_ = &ContainerIterator<T>::retractPointer;
+  stay_ = &ContainerIterator<T>::stayInPlace;
 }
 
-template <class T> void ContainerIterator<T>::AdvancePointer(void)
+template <class T> void ContainerIterator<T>::advancePointer(void)
 {
   ++element_;
-  state_ = element_->GetState();
 }
 
-template <class T> void ContainerIterator<T>::RetractPointer(void)
+template <class T> void ContainerIterator<T>::retractPointer(void)
 {
   --element_;
-  state_ = element_->GetState();
 }
 
-template <class T> void ContainerIterator<T>::StayInPlace(void)
+template <class T> void ContainerIterator<T>::stayInPlace(void)
 {
   return;
 }
@@ -97,7 +98,7 @@ template <class T> void ContainerIterator<T>::step(
 )
 {
   // boundary is a bit more complex than non-boundary...
-  if (state_ == Element<T>::State::Boundary) {
+  if (element_->getState() == Element<T>::State::Boundary) {
     
     // will either take step forward or stay in place    
     if (element_ == container_.first_) {
@@ -109,12 +110,11 @@ template <class T> void ContainerIterator<T>::step(
       
     // will either take step forward or backward (i.e. hop blocks)
     } else {
-      AssertIsBoundary<T>(element_);
-      AssertIsBoundary<T>(state_);
+      assertIsBoundary<T>(element_);
       
-      auto next = element_->GetNext();
-      AssertIsBoundary(next);
-      assert(next->GetNext() == element_); // assert the 2 way association
+      auto next = element_->getNext();
+      assertIsBoundary(next);
+      assert(next->getNext() == element_); // assert the 2 way association
       
       element_ = next;
       (this->*forward_or_backward)();
@@ -126,26 +126,26 @@ template <class T> void ContainerIterator<T>::step(
   }
 }
 
-template <class T> void ContainerIterator<T>::FindNextAlive(void)
+template <class T> void ContainerIterator<T>::findNextAlive(void)
 {
   step(forward_, stay_, forward_);
 
-  while (state_ != Element<T>::State::Alive && element_ != container_.last_) {
+  while (element_->getState() != Element<T>::State::Alive && element_ != container_.last_) {
     step(forward_, stay_, forward_);
   }
 }
 
-template <class T> void ContainerIterator<T>::FindFirstAlive(void)
+template <class T> void ContainerIterator<T>::findFirstAlive(void)
 {
-  if (element_->GetState() != Element<T>::State::Alive)
-    FindNextAlive();
+  if (element_->getState() != Element<T>::State::Alive)
+    findNextAlive();
 }
 
-template <class T> void ContainerIterator<T>::FindPrevAlive(void)
+template <class T> void ContainerIterator<T>::findPrevAlive(void)
 {
   step(stay_, backward_, backward_);
   
-  while (state_ != Element<T>::State::Alive && element_ != container_.first_) {
+  while (element_->getState() != Element<T>::State::Alive && element_ != container_.first_) {
     step(stay_, backward_, backward_);
   }
 }
@@ -157,19 +157,19 @@ template <class T> Element<T>* ContainerIterator<T>::get(void)
 
 template <class T> void ContainerIterator<T>::operator++(void)
 {
-  FindNextAlive();
+  findNextAlive();
 }
 
 template <class T> void ContainerIterator<T>::operator--(void)
 {
-  FindPrevAlive();
+  findPrevAlive();
 }
 
 template <class T> ContainerIterator<T> ContainerIterator<T>::operator-(size_t n)
 {
   ContainerIterator<T> tmp = ContainerIterator<T>(container_, element_);
-  for (auto i = 0; i < n; ++i) {
-    tmp.FindPrevAlive();
+  for (size_t i = 0; i < n; ++i) {
+    tmp.findPrevAlive();
   }
   
   return tmp;
@@ -177,16 +177,16 @@ template <class T> ContainerIterator<T> ContainerIterator<T>::operator-(size_t n
 
 template <class T> ContainerIterator<T> ContainerIterator<T>::operator+(size_t n)
 {
-  for (auto i = 0; i < n; ++i) {
-    FindNextAlive();
+  for (size_t i = 0; i < n; ++i) {
+    findNextAlive();
   }
 }
 
 template <class T> T& ContainerIterator<T>::operator*(void)
 {
-  assert(element_->GetState() == Element<T>::State::Alive);
+  assert(element_->getState() == Element<T>::State::Alive);
 
-  return element_->GetDataByReference();
+  return element_->getDataByReference();
 }
 
 template <class T> bool ContainerIterator<T>::operator==(ContainerIterator<T>&& other)
