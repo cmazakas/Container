@@ -155,6 +155,10 @@ template <class T> Element<T>* ContainerIterator<T>::get(void)
   return element_;
 }
 
+template <class T> typename Element<T>::State ContainerIterator<T>::getState(void) const {
+  return element_->getState();
+}
+
 template <class T> void ContainerIterator<T>::operator++(void)
 {
   findNextAlive();

@@ -37,9 +37,11 @@ template <class T> class Container
   friend void test<int>(void);
 
   template <class... Args> void emplace(Args&&... args);
-  void clear(iterator& it);
+  void remove(iterator& it);
+  void clear(void);
   size_type size(void) const;
   size_type capacity(void) const;
+  
   iterator begin(void)
   {
     auto it = iterator(*this, first_);
@@ -97,19 +99,16 @@ template <class T> template <class... Args> void Container<T>::emplace(Args&&...
   }
 }
 
-template <class T> void Container<T>::clear(iterator& it)
+template <class T> void Container<T>::remove(iterator& it)
 {
   auto element = it.get();
   
   assert(element->getState() == Element<T>::State::Alive);
   
   // set next ptr to free list head
-  element->setNext(free_list_);
-  element->setState(Element<T>::State::Free);
+  element->setNextAndState(free_list_, Element<T>::State::Free);
   free_list_ = element;
   --size_;
-  
-  it.findNextAlive();
 }
 
 template <class T> void Container<T>::pushBlock(void)

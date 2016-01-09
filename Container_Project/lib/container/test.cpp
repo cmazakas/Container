@@ -4,6 +4,8 @@
 template <> void test<int>(void)
 {
   {
+    std::cout<< "\nContainer<T>::Container tests\n" << std::endl;
+    
     Container<int> c;
 
     /*
@@ -11,11 +13,12 @@ template <> void test<int>(void)
      * array of blocks, set the first_ and last_ pointers of the
      * container and the state of the block should be
      * boundary -> [ free ] -> boundary.
-     * Uhere should also be a free list which spans the 
+     * There should also be a free list which spans the 
      * inner boundary
      *
      */
 
+    std::cout << "It should be constructed with a default capacity of 16 and have a size of 0" << std::endl;
     assert(c.blocks_.size() == 1);
 
     assert(c.size() == 0);
@@ -37,10 +40,14 @@ template <> void test<int>(void)
       curr = curr->getNext();
     }
     
+    assert(c.begin() == c.end());
+    std::cout << "Construction successful!\n" << std::endl;
+    
     /*
      * We should also be able to emplace elements in the container
      */
-     
+    
+    std::cout << "We should be able to insert element into the container" << std::endl;
     for (int i = 0; i < 16; ++i) {
       c.emplace(i);
     }
@@ -48,66 +55,120 @@ template <> void test<int>(void)
     typename Container<int>::iterator it = c.begin();
     decltype(size) i = 0;
     for ( ; it != c.end(); ++it, ++i) {
-      std::cout << it.get() << " : " << i << std::endl;
+//      std::cout << it.get() << " : " << i << std::endl;
       assert(it.get()->getState() == Element<int>::State::Alive);
       assert(it.get() == block.get() + i + 1);
       assert((decltype(size) ) *it == i);
     }
-    assert(c.free_list_ == nullptr);    
+    assert(c.free_list_ == nullptr);
+    std::cout << "We can!\n" << std::endl;
   }
   
   {
     std::cout << "\nBi-Directional Iterator Testing" << std::endl;
     Container<int> c;
     
+    const int size = 128;
+    const int capacity = 160;
+    
     /*
      * We should also be able to fully expand the capacity of the
      * container and it still be forwards and backwards iterable
      */
     
-    for (int i = 0; i < 128; ++i) {
+    for (int i = 0; i < size; ++i) {
       c.emplace(i);
     }
     
-    std::cout << "forward" << std::endl;
+    std::cout << "We should be able to iterate forward" << std::endl;
     int i = 0;
     for (auto it = c.begin(); it != c.end(); ++it, ++i) {
-      std::cout << *it << std::endl;
+//      std::cout << *it << std::endl;
       assert(*it == i);
     }
-    std::cout << std::endl;
+    std::cout << "We can!\n" << std::endl;
     
-    std::cout << "backward" << std::endl;
+    std::cout << "We should be able to iterate backward" << std::endl;
     --i;
     for (auto it = c.rend(); it != c.rbegin(); --it, --i) {
-      std::cout << *it << std::endl;
+//      std::cout << *it << std::endl;
       assert(*it == i);
     }
-    std::cout << std::endl;
+    std::cout << "We can!\n" << std::endl;
     
-    assert(c.capacity() == 160);
+    assert(c.capacity() == capacity);
+    
+    assert(c.end().getState() == Element<int>::State::Boundary);
   }
   
   {
-    std::cout << "\nClear method testing\n" << std::endl;
-    Container<int> c;
+    std::cout << "\nContainer<T>::remove() method testing\n" << std::endl;
     
-    for (int i = 0; i < 128; ++i) {
+    Container<int> c;
+    const int size = 128;
+    const int capacity = 160;
+    
+    for (int i = 0; i < size; ++i) {
       c.emplace(i);
     }
     
+    std::cout << "It should be able to remove every 4th element" << std::endl;
     int i = 0;
-    for (auto it = c.begin(); it != c.end(); ++i) {
+    for (auto it = c.begin(); it != c.end(); ++i, ++it) {
       if (i % 4 == 0) {
-        c.clear(it);
-      } else {
-        ++it;
-      }
+        c.remove(it); // .remove() invalidates iterators
+      } 
     }
     
     for (auto it = c.begin(); it != c.end(); ++it) {
-      std::cout << *it << std::endl;
+//      std::cout << *it << std::endl;
       assert(*it % 4 != 0);
     }
+    std::cout << "It does!\n" << std::endl;
+    
+    std::cout << "If we forward iterate, we should be able to remove the remaining elements" << std::endl;
+    for (auto it = c.begin(); it != c.end(); ++it) {
+      c.remove(it);
+    }
+    
+    assert(c.size() == 0);
+    assert(c.capacity() == capacity);
+    std::cout << "We can!\n" << std::endl;
+    
+    std::cout << "We should be able to empty it if we reverse backwards as well" << std::endl;
+    for (int i = 0; i < size; ++i) {
+      c.emplace(i);
+    }
+    
+    assert(c.size() == size);
+    assert(c.capacity() == capacity);
+    
+    for (auto it = c.rend(); it != c.rbegin(); --it) {
+      c.remove(it);
+    }
+    
+    assert(c.size() == 0);
+    std::cout << "We can!\n" << std::endl;
+    
+    std::cout << "The container should be able to be filled again" << std::endl;
+    for (int i = 0; i < size; ++i) {
+      c.emplace(i);
+    }
+    
+    i = 0;
+    for (auto it = c.begin(); it != c.end(); ++it, ++i) {
+      assert(*it == i);
+    }
+    
+    int j = size - 1;
+    for (auto it = c.rend(); it != c.rbegin(); --it, --j) {
+      assert(*it == j);
+    }
+    
+    assert(c.size() == size);
+    assert(c.capacity() == capacity);
+    std::cout << "It can!\n" << std::endl;
+    
+    std::cout << "Tests passed!" << std::endl;
   }
 }

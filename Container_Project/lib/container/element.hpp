@@ -7,10 +7,10 @@ template <class T> class Element
 {
   public:
   enum State {
-    Default,
-    Alive,
-    Free,
-    Boundary
+    Default,    // 0
+    Alive,      // 1
+    Free,       // 2
+    Boundary    // 3
   };
   union Buffer
   {
@@ -52,6 +52,13 @@ template <class T> class Element
     setState(State::Alive);
   }
 
+  /*
+   * 
+   * setNext() does NOT set the state of the element
+   * because it's a valid state for either a boundary
+   * or a free element to contain a next pointer
+   * so we leave it up to the caller to manage state
+   */
   void setNext(Element* next)
   {
     if (next)
@@ -64,6 +71,12 @@ template <class T> class Element
     }
     
     buffer_.next = next;
+  }
+
+  void setNextAndState(Element *next, State state) 
+  {
+    setNext(next);
+    setState(state);
   }
 
   State getState(void) const
