@@ -17,7 +17,15 @@ template <class T> class Element
     T data;
     Element* next;
     
-    // write destructor
+    Buffer(void)
+    {
+      next = nullptr;
+    }
+    
+    ~Buffer(void)
+    {
+      
+    }
   };
 
   private:
