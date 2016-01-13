@@ -35,16 +35,21 @@ template <class T> class Container
 
   public:
   Container(void);
-  friend void test<int>(void);
+
   template <class... Args> void emplace(Args&&... args);
   void remove(iterator& it);
   void clear(void); // have I defined this yet?
+
   size_type size(void) const;
   size_type capacity(void) const;
+  size_type getBlockSize(void) const;
+
   iterator begin(void);
   iterator end(void);
   iterator rbegin(void);
   iterator rend(void);
+
+  friend void test<int>(void);
 };
 
 /*
@@ -100,15 +105,17 @@ template <class T> void Container<T>::remove(iterator& it)
   assert(element->getState() == Element<T>::State::Alive);
 
   // set next ptr to free list head
+  auto old_free_list = free_list_;
   element->setNextAndState(free_list_, Element<T>::State::Free);
   free_list_ = element;
+  assert(free_list_ == old_free_list);
   --size_;
 }
 
 template <class T> void Container<T>::pushBlock(void)
 {
   assert(free_list_ == nullptr);
-  
+
   const size_type num_boundary_points = 2;
   const size_type true_block_size = block_size_ + num_boundary_points;
   const size_type first_idx = 0;
@@ -161,6 +168,11 @@ template <class T> typename Container<T>::size_type Container<T>::size(void) con
 template <class T> typename Container<T>::size_type Container<T>::capacity(void) const
 {
   return capacity_;
+}
+
+template <class T> typename Container<T>::size_type Container<T>::getBlockSize(void) const
+{
+  return block_size_;
 }
 
 template <class T> typename Container<T>::iterator Container<T>::begin(void)

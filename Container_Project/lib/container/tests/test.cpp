@@ -173,8 +173,32 @@ template <> void test<int>(void)
     assert(c.size() == size);
     assert(c.capacity() == capacity);
     std::cout << "It can!\n" << std::endl;
+  }
 
-    printTitle("Tests Passed!");
+  {
+    printTitle("High Pressure Testing");
+
+    std::cout << "It should be able to support equal parts insertions and deletions without crashing" << std::endl;
+    Container<int> cont;
+
+    for(int i = 0; i < 15000; ++i) {
+      cont.emplace(i);
+    }
+
+    auto it = cont.begin();
+    while (it != cont.end() && it != cont.rend() && it != cont.rbegin()) {
+      auto val = it.get()->getData() + 1;
+      std::cout << it.get() << std::endl;
+      for (auto i = 0; i < val; ++i) {
+        ++it;
+        std::cout << "after taking a step " << it.get() << std::endl;
+      }
+      cont.remove(it);
+      --it;
+    }
+
+
+    std::cout << "It can!\n" << std::endl;
   }
 }
 
@@ -215,6 +239,15 @@ template <> void test<Tetra>(void)
   } catch(std::exception& e) {
     assert(c.size() == size);
     assert(c.capacity() == 16);
+    assert(c.getBlockSize() == 32);
   }
   std::cout << "It doesn't\n" << std::endl;
+
+  std::cout << "It should still be able to be allocated to aftewards though" << std::endl;
+  for(int i = 0; i < 128; ++i) {
+    c.emplace(false);
+  }
+  std::cout << "It can!\n" << std::endl;
+
+  printTitle("Tests Passed!");
 }

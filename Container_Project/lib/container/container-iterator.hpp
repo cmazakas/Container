@@ -53,8 +53,6 @@ template <class T> class ContainerIterator
 
   void operator++(void);
   void operator--(void);
-  ContainerIterator operator-(size_t n);
-  ContainerIterator operator+(size_t n);
   T& operator*(void);
   bool operator==(ContainerIterator<T>&& other);
   bool operator!=(ContainerIterator<T>&& other);
@@ -167,23 +165,6 @@ template <class T> void ContainerIterator<T>::operator++(void)
 template <class T> void ContainerIterator<T>::operator--(void)
 {
   findPrevAlive();
-}
-
-template <class T> ContainerIterator<T> ContainerIterator<T>::operator-(size_t n)
-{
-  ContainerIterator<T> tmp = ContainerIterator<T>(container_, element_);
-  for (size_t i = 0; i < n; ++i) {
-    tmp.findPrevAlive();
-  }
-  
-  return tmp;
-}
-
-template <class T> ContainerIterator<T> ContainerIterator<T>::operator+(size_t n)
-{
-  for (size_t i = 0; i < n; ++i) {
-    findNextAlive();
-  }
 }
 
 template <class T> T& ContainerIterator<T>::operator*(void)
