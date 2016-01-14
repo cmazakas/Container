@@ -176,7 +176,7 @@ template <> void test<int>(void)
   }
 
   {
-    printTitle("High Pressure Testing");
+    printTitle("'High Pressure' Testing");
 
     std::cout << "It should be able to support equal parts insertions and deletions without crashing" << std::endl;
     Container<int> cont;
@@ -186,14 +186,14 @@ template <> void test<int>(void)
     }
 
     auto it = cont.begin();
-    while (it != cont.end() && it != cont.rend() && it != cont.rbegin()) {
-      auto val = it.get()->getData() + 1;
-      std::cout << it.get() << std::endl;
-      for (auto i = 0; i < val; ++i) {
-        ++it;
-        std::cout << "after taking a step " << it.get() << std::endl;
-      }
+    while (it != cont.end() && it != cont.rbegin() && it != cont.rend()) {
+      assert(it.getState() == Element<int>::State::Alive);
+      assert(it.getState() == Element<int>::State::Alive);
+          
+      ++it;
       cont.remove(it);
+      ++it;
+      cont.emplace(1337);
       --it;
     }
 

@@ -108,8 +108,12 @@ template <class T> void Container<T>::remove(iterator& it)
   auto old_free_list = free_list_;
   element->setNextAndState(free_list_, Element<T>::State::Free);
   free_list_ = element;
-  assert(free_list_ == old_free_list);
+  
   --size_;
+  
+  assert(free_list_->getNext() == old_free_list);
+  assert(free_list_ != old_free_list);
+  assert(free_list_->getState() == Element<T>::State::Free);
 }
 
 template <class T> void Container<T>::pushBlock(void)

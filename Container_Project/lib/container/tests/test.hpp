@@ -2,6 +2,7 @@
 #define TEST_HPP_
 
 #include <iostream>
+#include "../element.hpp"
 
 class Tetra;
 
