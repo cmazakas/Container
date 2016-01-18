@@ -1,11 +1,82 @@
 #include "test.hpp"
 #include "../container.hpp"
+#include "../helpers/utils.hpp"
 
 void printTitle(const std::string& s)
 {
   std::cout << "**" << std::string(s.length(), '*') << "**" << std::endl;
   std::cout << "  " << s << "  " << std::endl;
   std::cout << "**" << std::string(s.length(), '*') << "**\n" << std::endl;
+}
+
+/*
+ * Make sure to test the helper functions as
+ * these are the building blocks of the codebase
+ * */
+template <> void utilsTests<int>(void)
+{
+  /*
+   * setInternalFreeList
+   * */
+  {
+    const int size = 64;
+    std::unique_ptr<Element<int> []> elements(new Element<int>[size]);
+    Utils::setInternalFreeList(elements.get(), size);
+    for(int i = 0; i < size - 1; ++i) {
+      assert(elements[i].getState() == Element<int>::State::Free);
+      assert(elements[i].getNext() == elements.get() + i + 1);
+    }
+    assert(elements[size - 1].getState() == Element<int>::State::Free);
+    assert(elements[size - 1].getNext() == nullptr);
+  }
+
+  /*
+   * markBoundaries
+   * */
+  {
+    const int size = 16;
+    std::unique_ptr<Element<int> []> elements(new Element<int>[size]);
+    Utils::markBoundaries(elements.get(), size);
+    assert(elements[0].getState() == Element<int>::State::Boundary);
+    assert(elements[0].getNext() == nullptr);
+    assert(elements[size - 1].getState() == Element<int>::State::Boundary);
+    assert(elements[size - 1].getNext() == nullptr);
+  }
+
+  /*
+   * createBlock
+   * */
+  {
+    const int size = 64;
+    std::unique_ptr<Element<int> []> block(std::move(Utils::createBlock<int>(size)));
+    assert(block[0].getState() == Element<int>::State::Boundary);
+    assert(block[0].getNext() == nullptr);
+    for(int i = 1; i < size; ++i) {
+      assert(block[i].getState() == Element<int>::State::Free);
+      assert(block[i].getNext() == block.get() + i + 1);
+    }
+    assert(block[size - 1 + 1].getState() == Element<int>::State::Free);
+    assert(block[size - 1 + 1].getNext() == nullptr);
+    assert(block[size - 1 + 2].getState() == Element<int>::State::Boundary);
+    assert(block[size - 1 + 2].getNext() == nullptr);
+  }
+  
+  /*
+   * linkBlocks
+   * */
+   {
+     const int size = 64;
+     const int num_elements = size + 2;
+     std::unique_ptr<Element<int> []> block1(std::move(Utils::createBlock<int>(size)));
+     decltype(block1) block2(std::move(Utils::createBlock<int>(size)));
+     Utils::linkBlocks(block1.get(), block2.get(), num_elements - 1, 0);
+     assert(block1[num_elements - 1].getNext() == block2.get());
+     assert(block2[0].getNext() == block1.get() + num_elements - 1);
+     
+     Utils::linkBlocks(block1.get(), block2.get(), 0, num_elements - 1);
+     assert(block1[0].getNext() == block2.get() + num_elements - 1);
+     assert(block2[num_elements - 1].getNext() == block1.get());
+   }
 }
 
 template <> void test<int>(void)
@@ -186,17 +257,16 @@ template <> void test<int>(void)
     }
 
     auto it = cont.begin();
-    while (it != cont.end() && it != cont.rbegin() && it != cont.rend()) {
+    while(it != cont.end() && it != cont.rbegin() && it != cont.rend()) {
       assert(it.getState() == Element<int>::State::Alive);
       assert(it.getState() == Element<int>::State::Alive);
-          
+
       ++it;
       cont.remove(it);
       ++it;
       cont.emplace(1337);
       --it;
     }
-
 
     std::cout << "It can!\n" << std::endl;
   }

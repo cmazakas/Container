@@ -90,7 +90,7 @@ template <class T> void ContainerIterator<T>::stayInPlace(void)
 }
 
 template <class T> void ContainerIterator<T>::step(
-    void (ContainerIterator<T>::*forward_or_stay)(void),
+    void (ContainerIterator<T>::*forward_or_stay)(void), // update this to std::men_fn
     void (ContainerIterator<T>::*stay_or_backward)(void),
     void (ContainerIterator<T>::*forward_or_backward)(void)
 )
