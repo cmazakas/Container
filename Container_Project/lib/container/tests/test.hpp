@@ -16,4 +16,7 @@ template <> void utilsTests<int>(void);
 template <class U> void vectorListConstructorTests(void);
 template <> void vectorListConstructorTests<int>(void);
 
+template <class U> void elementTests(void);
+template <> void elementTests<int>(void);
+
 #endif // TEST_HPP_

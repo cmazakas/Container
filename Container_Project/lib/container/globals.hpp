@@ -21,4 +21,6 @@ template <class T> using Block = std::pair<BlockPtr<T>, size_t>;
 template <class T> using Blocks = std::vector<Block<T>>;
 template <class T> using FreeLists = std::unordered_map<std::thread::id, Element<T>*>;
 
+enum ElementState { Free, Alive, Boundary };
+
 #endif // GLOBALS_HPP_

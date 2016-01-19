@@ -2,7 +2,7 @@
 #define VECTORLIST_HPP_
 
 #include "../globals.hpp"
-#include "../element.hpp"
+#include "../element/element.hpp"
 #include "../tests/test.hpp"
 
 template <class T> class VectorList

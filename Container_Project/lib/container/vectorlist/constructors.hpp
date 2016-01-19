@@ -10,5 +10,5 @@ template <class T> VectorList<T>::VectorList(void)
   size_ = 0;
   capacity_ = 0;
   block_size_ = INITIAL_BLOCK_SIZE;
-  pushBlock();
+//  pushBlock();
 }
