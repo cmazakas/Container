@@ -14,8 +14,18 @@ public:
     data_ = new int[16];
   }
 
+  NonTrivial(const NonTrivial& other) {
+    data_ = new int[16];
+    // would put copy operation here
+  }
+
+  NonTrivial(NonTrivial&& other) {
+    data_ = other.data_;
+    other.data_ = nullptr;
+  }
+
   ~NonTrivial(void) {
-    delete[] data_;
+    if (data_ != nullptr) delete[] data_;
   }
 };
 

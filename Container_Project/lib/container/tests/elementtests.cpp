@@ -34,4 +34,14 @@ template <> void elementTests<NonTrivial>(void)
 
     Element<NonTrivial> other(std::move(element));
   }
+
+  /*
+   * It should be copy-constructible
+   * */
+  {
+    Element<NonTrivial> element;
+    element.emplace();
+
+    Element<NonTrivial> other((const Element<NonTrivial>& ) element);
+  }
 }

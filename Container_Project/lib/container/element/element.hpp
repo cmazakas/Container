@@ -27,7 +27,7 @@ public:
 template <class T> template <class ...Args> void Element<T>::emplace(Args&&... args)
 {
   assert(state_ == ElementState::Free);
-  new(data_) T {args...};
+  new(data_) T(std::forward<Args>(args)...);
   state_ = ElementState::Alive;
 }
 
@@ -44,7 +44,7 @@ template <class T> Element<T>::Element(void)
  * */
 template <class T> Element<T>::Element(const Element& other)
 {
-  const T& other_data = other.data_[0];
+  const T& other_data = *reinterpret_cast<const T*>(other.data_);
   new(data_) T(other_data);
   state_ = ElementState::Alive;
 }
@@ -55,7 +55,7 @@ template <class T> Element<T>::Element(const Element& other)
 template <class T> Element<T>::Element(Element&& other)
 {
   T&& other_data = std::move(*reinterpret_cast<T*>(other.data_));
-  new(data_) T(other_data);
+  new(data_) T(std::forward<T>(other_data));
   state_ = ElementState::Alive;
 
   other.state_ = ElementState::Free;
