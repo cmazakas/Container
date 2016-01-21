@@ -7,7 +7,7 @@
 template <class T> class Element
 {
 private:
-  std::aligned_storage<sizeof(T), alignof(T)> buffer_;
+  typename std::aligned_storage<sizeof(T), alignof(T)>::type data_[1];
   ElementState state_;
 
 public:
@@ -18,18 +18,17 @@ public:
   Element& operator=(Element&& other);
   ~Element(void);
 
-  T getData(void) const;
-  ElementState getState(void) const;
-  void setData(const T& t);
-  void setData(T&& t);
+  template <class ...Args> void emplace(Args&&... args);
 };
 
 /*
- * Return the underlying data of the Element
+ * Construct an element in-place
  * */
-template <class T> T Element<T>::getData(void) const
+template <class T> template <class ...Args> void Element<T>::emplace(Args&&... args)
 {
-  return *((T* ) &buffer_);
+  assert(state_ == ElementState::Free);
+  new(data_) T {args...};
+  state_ = ElementState::Alive;
 }
 
 /*
@@ -45,10 +44,9 @@ template <class T> Element<T>::Element(void)
  * */
 template <class T> Element<T>::Element(const Element& other)
 {
-//  const T& other_data = other.getData();
-//  setData(other_data);
-  new(&buffer_) std::aligned_storage<sizeof(T), alignof(T)>(other.buffer_);
-  state_ = other.state_;
+  const T& other_data = other.data_[0];
+  new(data_) T(other_data);
+  state_ = ElementState::Alive;
 }
 
 /*
@@ -56,29 +54,11 @@ template <class T> Element<T>::Element(const Element& other)
  * */
 template <class T> Element<T>::Element(Element&& other)
 {
-  T&& other_data = std::move(other.getData());
-  setData(other_data);
-  state_ = other.state_;
-}
+  T&& other_data = std::move(*reinterpret_cast<T*>(other.data_));
+  new(data_) T(other_data);
+  state_ = ElementState::Alive;
 
-/*
- * Copy assignment
- * */
-template <class T> Element<T>& Element<T>::operator=(const Element& other)
-{
-  const T& other_data = other.getData();
-  *((T* ) &other.buffer_) = other_data;
-  return *this;
-}
-
-/*
- * Move assignment
- * */
-template <class T> Element<T>& Element<T>::operator=(Element&& other)
-{
-  T&& other_data = other.getData();
-  *((T* ) &other.buffer_) = other_data;
-  return *this;
+  other.state_ = ElementState::Free;
 }
 
 /*
@@ -86,35 +66,8 @@ template <class T> Element<T>& Element<T>::operator=(Element&& other)
  * */
 template <class T> Element<T>::~Element(void)
 {
-  if (state_ == ElementState::Alive) {
-    T* t = (T* ) &buffer_;
-    t->~T();
-  }
-
-  state_ = ElementState::Free;
-}
-
-/*
- * Get the current state of the Element
- * */
-template <class T> ElementState Element<T>::getState(void) const
-{
-  return state_;
-}
-
-/*
- * Set the state of the element
- * */
-template <class T> void Element<T>::setData(const T& t)
-{
-  new(&buffer_) T(t);
-  state_ = ElementState::Alive;
-}
-
-template <class T> void Element<T>::setData(T&& t)
-{
-  new(&buffer_) T(t);
-  state_ = ElementState::Alive;
+  if (state_ == ElementState::Alive)
+    reinterpret_cast<const T*>(data_)->~T();
 }
 
 #endif // ELEMENT_HPP_

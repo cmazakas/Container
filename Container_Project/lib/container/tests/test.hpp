@@ -4,11 +4,20 @@
 #include "../globals.hpp"
 #include "../helpers/utils.hpp"
 
-//class Tetra;
-//
-//template <class U> void test(void);
-//template <> void test<int>(void);
-//template <> void test<Tetra>(void);
+class NonTrivial
+{
+private:
+  int *data_;
+
+public:
+  NonTrivial(void) {
+    data_ = new int[16];
+  }
+
+  ~NonTrivial(void) {
+    delete[] data_;
+  }
+};
 
 template <class U> void utilsTests(void);
 template <> void utilsTests<int>(void);
@@ -18,5 +27,6 @@ template <> void vectorListConstructorTests<int>(void);
 
 template <class U> void elementTests(void);
 template <> void elementTests<int>(void);
+template <> void elementTests<NonTrivial>(void);
 
 #endif // TEST_HPP_
