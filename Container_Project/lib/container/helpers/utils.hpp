@@ -14,35 +14,43 @@ namespace Utils
    * Every Element is Free'd, and set to point to the next element
    * in the array. The last element of the array points to nothing.
    * */
-//  template <class T> void setInternalFreeList(Element<T>* element, size_t n)
-//  {
-//    for(size_t i = 0; i < n; ++i) {
-//      element[i].setNextAndState(i == n - 1 ? nullptr : element + i + 1, Element<T>::State::Free);
-//    }
-//  }
+  template <class T> void setInternalFreeList(Element<T>* elements, size_t size)
+  {
+    for (size_t i = 0; i < size; ++i) {
+      elements[i].setNext(i == size - 1 ? nullptr : elements + i + 1);
+    }
+  }
 
   /*
-   * Takes an array of Elements and sets the first and last elements
-   * to be of type State::Boundary
+   * Takes an array of Elements of size N and sets the first
+   * and last Elements to be of state Boundary
    * */
-//  template <class T> void markBoundaries(Element<T>* element, size_t n)
-//  {
-//    element[0].setNextAndState(nullptr, Element<T>::State::Boundary);
-//    element[n - 1].setNextAndState(nullptr, Element<T>::State::Boundary);
-//  }
+  template <class T> void markBoundaries(Element<T>* elements, size_t n)
+  {
+    auto first = elements + 0;
+    auto last = elements + n - 1;
+
+    first->makeBoundary();
+    first->setNext(nullptr);
+
+    last->makeBoundary();
+    last->setNext(nullptr);
+  }
+
 
   /*
-   * Create a free-floating "block"
+   * Create a free-floating "Block" of capacity N
    * */
-//  template <class T> Block<T> createBlock(size_t size)
-//  {
-//    const size_t num_elements = size + 2;
-//    BlockPtr<int> block_ptr(new Element<int>[num_elements]);
-//    Utils::markBoundaries<int>(block_ptr.get(), num_elements);
-//    Utils::setInternalFreeList<int>(block_ptr.get() + 1, size);
-//    Block<T> block(std::move(block_ptr), size);
-//    return block;
-//  }
+  template <class T> Block<T> createBlock(size_t size)
+  {
+    size_t num_elements = size + 2;
+    BlockPtr<T> block_ptr(new Element<T>[num_elements]);
+    setInternalFreeList(block_ptr.get() + 1, size);
+    markBoundaries(block_ptr.get(), num_elements);
+
+    Block<T> block(std::move(block_ptr), size);
+    return block;
+  }
 
   /*
    * Link two elements together at specified indices

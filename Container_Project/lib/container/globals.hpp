@@ -14,6 +14,7 @@
 #include <atomic>
 #include <thread>
 #include <unordered_map>
+#include <iomanip>
 
 template <class T> class Element;
 template <class T> using BlockPtr = std::unique_ptr<Element<T> []>;

@@ -4,19 +4,23 @@
 #include "../globals.hpp"
 #include "../helpers/utils.hpp"
 
+/*
+ * Dummy class used for testing
+ * */
 class NonTrivial
 {
-private:
+public:
   int *data_;
 
-public:
   NonTrivial(void) {
     data_ = new int[16];
   }
 
   NonTrivial(const NonTrivial& other) {
     data_ = new int[16];
-    // would put copy operation here
+
+    for (size_t i = 0; i < 16; ++i)
+      data_[i] = other.data_[i];
   }
 
   NonTrivial(NonTrivial&& other) {
@@ -27,8 +31,26 @@ public:
   ~NonTrivial(void) {
     if (data_ != nullptr) delete[] data_;
   }
+
+  NonTrivial& operator=(const NonTrivial& other) {
+    data_ = new int[16];
+
+    for (size_t i = 0; i < 16; ++i)
+      data_[i] = other.data_[i];
+
+    return *this;
+  }
+
+  NonTrivial& operator=(NonTrivial&& other) {
+    data_ = other.data_;
+    other.data_ = nullptr;
+    return *this;
+  }
 };
 
+/*
+ * Testing functions
+ * */
 template <class U> void utilsTests(void);
 template <> void utilsTests<int>(void);
 
