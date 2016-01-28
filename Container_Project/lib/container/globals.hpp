@@ -15,6 +15,7 @@
 #include <thread>
 #include <unordered_map>
 #include <iomanip>
+#include <type_traits>
 
 template <class T> class Element;
 template <class T> using BlockPtr = std::unique_ptr<Element<T> []>;

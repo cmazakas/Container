@@ -1,7 +1,8 @@
 #include "./test.hpp"
 #include "../helpers/utils.hpp"
+#include "../element/element.hpp"
 
-template <> void utilsTests<int>(void)
+template <> void utilsTests<int>( void )
 {
   const int num_elements = 16;
   /*
@@ -12,17 +13,17 @@ template <> void utilsTests<int>(void)
    * to nullptr
    * */
   {
-    BlockPtr<int> block_ptr(new Element<int>[num_elements]);
+    BlockPtr<int> block_ptr( new Element<int>[num_elements] );
 
-    Utils::setInternalFreeList(block_ptr.get(), num_elements);
+    Utils::setInternalFreeList( block_ptr.get(), num_elements );
 
-    for (int i = 0; i < num_elements - 1; ++i) {
-      assert(block_ptr[i].getState() == ElementState::Free);
-      assert(block_ptr[i].getNext() == block_ptr.get() + i + 1);
+    for( int i = 0; i < num_elements - 1; ++i ) {
+      assert( block_ptr[i].getState() == ElementState::Free );
+      assert( block_ptr[i].getNext() == block_ptr.get() + i + 1 );
     }
 
-    assert(block_ptr[num_elements - 1].getState() == ElementState::Free);
-    assert(block_ptr[num_elements - 1].getNext() == nullptr);
+    assert( block_ptr[num_elements - 1].getState() == ElementState::Free );
+    assert( block_ptr[num_elements - 1].getNext() == nullptr );
   }
 
   /*
@@ -30,11 +31,11 @@ template <> void utilsTests<int>(void)
    * with boundary Elements
    * */
   {
-    BlockPtr<int> block_ptr(new Element<int>[num_elements]);
-    Utils::markBoundaries(block_ptr.get(), num_elements);
+    BlockPtr<int> block_ptr( new Element<int>[num_elements] );
+    Utils::markBoundaries( block_ptr.get(), num_elements );
 
-    assert(block_ptr[0].getState() == ElementState::Boundary);
-    assert(block_ptr[num_elements - 1].getState() == ElementState::Boundary);
+    assert( block_ptr[0].getState() == ElementState::Boundary );
+    assert( block_ptr[num_elements - 1].getState() == ElementState::Boundary );
   }
 
   /*
@@ -42,22 +43,22 @@ template <> void utilsTests<int>(void)
    * new blocks as we need
    * */
   {
-    Block<int> block {std::move(Utils::createBlock<int>((size_t ) num_elements))};
-    assert(std::get<size_t>(block) == num_elements);
+    Block<int> block{ std::move( Utils::createBlock<int>( (size_t)num_elements ) ) };
+    assert( std::get<size_t>( block ) == num_elements );
 
-    auto& block_ptr = std::get<BlockPtr<int>>(block);
+    auto& block_ptr = std::get<BlockPtr<int> >( block );
 
-    assert(block_ptr[0].getState() == ElementState::Boundary);
-    assert(block_ptr[num_elements + 1].getState() == ElementState::Boundary);
-    assert(block_ptr[0].getNext() == nullptr);
-    assert(block_ptr[num_elements + 1].getNext() == nullptr);
+    assert( block_ptr[0].getState() == ElementState::Boundary );
+    assert( block_ptr[num_elements + 1].getState() == ElementState::Boundary );
+    assert( block_ptr[0].getNext() == nullptr );
+    assert( block_ptr[num_elements + 1].getNext() == nullptr );
 
-    for (int i = 0; i < num_elements - 1; ++i) {
-      assert(block_ptr[i + 1].getState() == ElementState::Free);
-      assert(block_ptr[i + 1].getNext() == block_ptr.get() + i + 2);
+    for( int i = 0; i < num_elements - 1; ++i ) {
+      assert( block_ptr[i + 1].getState() == ElementState::Free );
+      assert( block_ptr[i + 1].getNext() == block_ptr.get() + i + 2 );
     }
 
-    assert(block_ptr[num_elements].getState() == ElementState::Free);
-    assert(block_ptr[num_elements].getNext() == nullptr);
+    assert( block_ptr[num_elements].getState() == ElementState::Free );
+    assert( block_ptr[num_elements].getNext() == nullptr );
   }
 }

@@ -10,6 +10,5 @@ template <> void vectorListConstructorTests<int>(void)
     VectorList<int> vector_list;
     assert(vector_list.capacity() == INITIAL_BLOCK_SIZE);
     assert(vector_list.size() == 0);
-
   }
 }

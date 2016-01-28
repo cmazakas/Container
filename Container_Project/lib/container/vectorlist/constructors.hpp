@@ -1,8 +1,8 @@
 template <class T> class VectorList;
 
-template <class T> VectorList<T>::VectorList(void)
+template <class T> VectorList<T>::VectorList( void )
 {
-  blocks_.reserve(INITIAL_BLOCK_SIZE);
+  blocks_.reserve( INITIAL_BLOCK_SIZE );
 
   first_ = nullptr;
   last_ = nullptr;
@@ -10,5 +10,5 @@ template <class T> VectorList<T>::VectorList(void)
   size_ = 0;
   capacity_ = 0;
   block_size_ = INITIAL_BLOCK_SIZE;
-//  pushBlock();
+  //  pushBlock();
 }
