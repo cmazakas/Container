@@ -16,11 +16,12 @@
 #include <unordered_map>
 #include <iomanip>
 #include <type_traits>
+#include <random>
 
 template <class T> class Element;
 template <class T> using BlockPtr = std::unique_ptr<Element<T> []>;
 template <class T> using Block = std::pair<BlockPtr<T>, size_t>;
-template <class T> using Blocks = std::vector<Block<T>>;
+template <class T> using Blocks = std::vector<Block<T> >;
 template <class T> using FreeLists = std::unordered_map<std::thread::id, Element<T>*>;
 
 enum ElementState { Free, Alive, Boundary };

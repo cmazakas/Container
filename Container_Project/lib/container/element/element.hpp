@@ -12,7 +12,8 @@
  * we have issues when we try to set the
  * storage of the Element to a pointer...
  * */
-template <class T> constexpr size_t getSize()
+template <class T>
+constexpr size_t getSize()
 {
   return sizeof( T ) < sizeof( T* ) ? sizeof( T* ) : sizeof( T );
 }
@@ -21,7 +22,8 @@ template <class T> constexpr size_t getSize()
  * Our Element class which contains either a type T
  * or a pointer to another Element
  * */
-template <class T> class Element
+template <class T>
+class Element
 {
   private:
   typename std::aligned_storage<getSize<T>(), alignof( T )>::type data_[1];
@@ -43,7 +45,8 @@ template <class T> class Element
     state_ = ElementState::Alive;
   }
 
-  template <class... Args> void emplace( Args&&... args );
+  template <class... Args>
+  void emplace( Args&&... args );
   void setNext( Element* next );
   void makeBoundary( void );
   void clear( void );
@@ -56,7 +59,9 @@ template <class T> class Element
 /*
  * Default constructor
  * */
-template <class T> Element<T>::Element( void )
+template <class T>
+Element<T>::Element( void )
+    : lock_( ATOMIC_FLAG_INIT )
 {
   state_ = ElementState::Free;
 }
@@ -64,19 +69,21 @@ template <class T> Element<T>::Element( void )
 /*
  * Copy constructor
  * */
-template <class T> Element<T>::Element( const Element& other )
+template <class T>
+Element<T>::Element( const Element& other )
 {
-  auto mf = std::mem_fn( &Element::testFunction );
+  auto mf = std::bind( &Element::testFunction, this, other );
   Utils::spinLockExecutor<decltype( mf )>( mf, lock_ );
-  const T& other_data = *reinterpret_cast<const T*>( other.data_ );
-  new ( data_ ) T{ other_data };
-  state_ = ElementState::Alive;
+  //  const T& other_data = *reinterpret_cast<const T*>( other.data_ );
+  //  new ( data_ ) T{ other_data };
+  //  state_ = ElementState::Alive;
 }
 
 /*
  * Move constructor
  * */
-template <class T> Element<T>::Element( Element&& other )
+template <class T>
+Element<T>::Element( Element&& other )
 {
   T&& other_data = std::move( *reinterpret_cast<T*>( other.data_ ) );
   new ( data_ ) T{ std::forward<T>( other_data ) };
@@ -88,7 +95,8 @@ template <class T> Element<T>::Element( Element&& other )
 /*
  * Copy assignment
  * */
-template <class T> Element<T>& Element<T>::operator=( const Element& other )
+template <class T>
+Element<T>& Element<T>::operator=( const Element& other )
 {
   *reinterpret_cast<T*>( data_ ) = *reinterpret_cast<T*>( other.data_ );
   state_ = ElementState::Alive;
@@ -97,7 +105,8 @@ template <class T> Element<T>& Element<T>::operator=( const Element& other )
 /*
  * Move assignment
  * */
-template <class T> Element<T>& Element<T>::operator=( Element&& other )
+template <class T>
+Element<T>& Element<T>::operator=( Element&& other )
 {
   T&& other_data = std::move( *reinterpret_cast<T*>( other.data_ ) );
   *reinterpret_cast<T*>( data_ ) = std::forward<T>( other_data );
@@ -107,7 +116,8 @@ template <class T> Element<T>& Element<T>::operator=( Element&& other )
 /*
  * Destructor
  * */
-template <class T> Element<T>::~Element( void )
+template <class T>
+Element<T>::~Element( void )
 {
   if( state_ == ElementState::Alive ) reinterpret_cast<const T*>( data_ )->~T();
 }
@@ -115,7 +125,9 @@ template <class T> Element<T>::~Element( void )
 /*
  * Construct an element in-place
  * */
-template <class T> template <class... Args> void Element<T>::emplace( Args&&... args )
+template <class T>
+template <class... Args>
+void Element<T>::emplace( Args&&... args )
 {
   assert( state_ == ElementState::Free );
   new ( data_ ) T{ std::forward<Args>( args )... };
@@ -125,7 +137,8 @@ template <class T> template <class... Args> void Element<T>::emplace( Args&&... 
 /*
  * Assign an Element* value to the storage of an Element
  * */
-template <class T> void Element<T>::setNext( Element* next )
+template <class T>
+void Element<T>::setNext( Element* next )
 {
   assert( state_ == ElementState::Free || state_ == ElementState::Boundary );
   new ( data_ ) Element*( next );
@@ -136,7 +149,8 @@ template <class T> void Element<T>::setNext( Element* next )
  * Change an element's state to a boundary
  * Will not clear() the Element
  * */
-template <class T> void Element<T>::makeBoundary( void )
+template <class T>
+void Element<T>::makeBoundary( void )
 {
   state_ = ElementState::Boundary;
 }
@@ -144,7 +158,8 @@ template <class T> void Element<T>::makeBoundary( void )
 /*
  * Obtain a copy of the value T stored in the Element
  * */
-template <class T> T Element<T>::getData( void ) const
+template <class T>
+T Element<T>::getData( void ) const
 {
   assert( state_ == ElementState::Alive );
   return *reinterpret_cast<const T*>( data_ );
@@ -153,7 +168,8 @@ template <class T> T Element<T>::getData( void ) const
 /*
  * Obtain the value of the "next" pointer stored in the Element
  * */
-template <class T> Element<T>* Element<T>::getNext( void )
+template <class T>
+Element<T>* Element<T>::getNext( void )
 {
   assert( state_ == ElementState::Boundary || state_ == ElementState::Free );
   Element* next = *reinterpret_cast<Element**>( data_ );
@@ -163,7 +179,8 @@ template <class T> Element<T>* Element<T>::getNext( void )
 /*
  * Get the current state of the Element
  * */
-template <class T> ElementState Element<T>::getState( void ) const
+template <class T>
+ElementState Element<T>::getState( void ) const
 {
   return state_;
 }
@@ -171,7 +188,8 @@ template <class T> ElementState Element<T>::getState( void ) const
 /*
  * Clears the current Element
  * */
-template <class T> void Element<T>::clear( void )
+template <class T>
+void Element<T>::clear( void )
 {
   assert( state_ == ElementState::Alive );
   reinterpret_cast<const T*>( data_ )->~T();

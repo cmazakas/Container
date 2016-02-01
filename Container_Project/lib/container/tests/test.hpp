@@ -9,39 +9,45 @@
  * */
 class NonTrivial
 {
-public:
-  int *data_;
+  public:
+  int* data_;
 
-  NonTrivial( void ) {
+  NonTrivial( void )
+  {
     data_ = new int[16];
   }
 
-  NonTrivial( const NonTrivial& other ) {
+  NonTrivial( const NonTrivial& other )
+  {
     data_ = new int[16];
 
-    for ( size_t i = 0; i < 16; ++i )
+    for( size_t i = 0; i < 16; ++i )
       data_[i] = other.data_[i];
   }
 
-  NonTrivial( NonTrivial&& other ) {
+  NonTrivial( NonTrivial&& other )
+  {
     data_ = other.data_;
     other.data_ = nullptr;
   }
 
-  ~NonTrivial( void ) {
-    if ( data_ != nullptr ) delete[] data_;
+  ~NonTrivial( void )
+  {
+    if( data_ != nullptr ) delete[] data_;
   }
 
-  NonTrivial& operator=( const NonTrivial& other ) {
+  NonTrivial& operator=( const NonTrivial& other )
+  {
     data_ = new int[16];
 
-    for ( size_t i = 0; i < 16; ++i )
+    for( size_t i = 0; i < 16; ++i )
       data_[i] = other.data_[i];
 
     return *this;
   }
 
-  NonTrivial& operator=( NonTrivial&& other ) {
+  NonTrivial& operator=( NonTrivial&& other )
+  {
     data_ = other.data_;
     other.data_ = nullptr;
     return *this;
@@ -60,5 +66,7 @@ template <> void vectorListConstructorTests<int>( void );
 template <class U> void elementTests( void );
 template <> void elementTests<int>( void );
 template <> void elementTests<NonTrivial>( void );
+
+void atomicArrayTests( void );
 
 #endif // TEST_HPP_

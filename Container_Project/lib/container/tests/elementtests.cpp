@@ -11,7 +11,7 @@
  * the prettiest native interface.
  * */
 
-template <> void elementTests<int>(void)
+template <> void elementTests<int>( void )
 {
   /*
    * We should be able to create an element that
@@ -21,23 +21,23 @@ template <> void elementTests<int>(void)
     const int value = 1337;
 
     Element<int> element;
-    element.emplace(value);
+    element.emplace( value );
 
-    assert(element.getState() == ElementState::Alive);
-    assert(element.getData() == value);
+    assert( element.getState() == ElementState::Alive );
+    assert( element.getData() == value );
 
     element.clear();
-    assert(element.getState() == ElementState::Free);
+    assert( element.getState() == ElementState::Free );
 
     Element<int> other_element;
 
-    element.setNext(&other_element);
-    other_element.setNext(&element);
+    element.setNext( &other_element );
+    other_element.setNext( &element );
 
-    assert(element.getNext() == &other_element);
-    assert(element.getState() == ElementState::Free);
-    assert(other_element.getState() == ElementState::Free);
-    assert(other_element.getNext() == &element);
+    assert( element.getNext() == &other_element );
+    assert( element.getState() == ElementState::Free );
+    assert( other_element.getState() == ElementState::Free );
+    assert( other_element.getNext() == &element );
   }
 }
 
@@ -53,7 +53,7 @@ template <> void elementTests<int>(void)
  * track the number of allocations and frees
  * */
 
-template <> void elementTests<NonTrivial>(void)
+template <> void elementTests<NonTrivial>( void )
 {
   /*
    * It should be default constructible
@@ -61,7 +61,6 @@ template <> void elementTests<NonTrivial>(void)
   {
     Element<NonTrivial> element;
     element.emplace(); // +1 allocation = 1
-
   }
 
   /*
@@ -71,7 +70,7 @@ template <> void elementTests<NonTrivial>(void)
     Element<NonTrivial> element;
     element.emplace(); // +1 allocation = 2
 
-    Element<NonTrivial> other(std::move(element));
+    Element<NonTrivial> other( std::move( element ) );
   }
 
   /*
@@ -81,7 +80,7 @@ template <> void elementTests<NonTrivial>(void)
     Element<NonTrivial> element;
     element.emplace(); // +1 allocation = 3
 
-    Element<NonTrivial> other((const Element<NonTrivial>& ) element); // +1 allocation = 4
+    Element<NonTrivial> other( (const Element<NonTrivial>&)element ); // +1 allocation = 4
   }
 
   /*
@@ -91,7 +90,7 @@ template <> void elementTests<NonTrivial>(void)
     Element<NonTrivial> element;
     element.emplace(); // +1 allocation = 5
 
-    Element<NonTrivial> other = std::move(element);
+    Element<NonTrivial> other = std::move( element );
   }
 
   /*
