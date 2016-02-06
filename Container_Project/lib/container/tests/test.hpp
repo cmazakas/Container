@@ -57,16 +57,24 @@ class NonTrivial
 /*
  * Testing functions
  * */
-template <class U> void utilsTests( void );
-template <> void utilsTests<int>( void );
+template <class U>
+void utilsTests( void );
+template <>
+void utilsTests<int>( void );
 
-template <class U> void vectorListConstructorTests( void );
-template <> void vectorListConstructorTests<int>( void );
+template <class U>
+void vectorListConstructorTests( void );
+template <>
+void vectorListConstructorTests<int>( void );
 
-template <class U> void elementTests( void );
-template <> void elementTests<int>( void );
-template <> void elementTests<NonTrivial>( void );
+template <class U>
+void elementTests( void );
+template <>
+void elementTests<int>( void );
+template <>
+void elementTests<NonTrivial>( void );
 
 void atomicArrayTests( void );
+void atomicStructArrayTests( void );
 
 #endif // TEST_HPP_
